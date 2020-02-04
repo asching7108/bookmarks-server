@@ -25,7 +25,7 @@ app.use(function validateBearerToken(req, res, next) {
 	}
 	next();
 });
-app.use(bookmarksRouter);
+app.use('/api/bookmarks', bookmarksRouter);
 
 /* error handler */
 app.use((error, req, res, next) => {

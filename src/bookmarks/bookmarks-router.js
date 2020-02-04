@@ -1,5 +1,6 @@
 const express = require('express');
 const xss = require('xss');
+const path = require('path');
 const { isWebUri } = require('valid-url');
 const logger = require('../logger');
 const { bookmarks } = require('../store');
@@ -17,7 +18,7 @@ const serializeBookmark = bookmark => ({
 });
 
 bookmarksRouter
-	.route('/bookmarks')
+	.route('/')
 
 	// get the list of all bookmarks
 	.get((req, res, next) => {
@@ -62,14 +63,14 @@ bookmarksRouter
 				logger.info(`Bookmark with id ${bookmark.id} created.`);
 				res
 					.status(201)
-					.location(`/bookmarks/${bookmark.id}`)
+					.location(path.posix.join(req.originalUrl, `/${bookmark.id}`))
 					.json(serializeBookmark(bookmark));
 			})
 			.catch(next);
 	});
 
 bookmarksRouter
-	.route('/bookmarks/:id')
+	.route('/:id')
 	.all((req, res, next) => {
 		const id = req.params.id;
 		BookmarksService.getById(req.app.get('db'), id)
@@ -102,6 +103,28 @@ bookmarksRouter
 					.status(204).end();
 			})
 			.catch(next);
-	});
+	})
+	.patch(bodyParser, (req, res, next) => {
+		console.log(req.body);
+		const { title, url, rating, description } = req.body;
+		const bookmarkToUpdate = { title, url, rating, description };
+
+		const numOfValues = Object.values(bookmarkToUpdate).filter(Boolean).length;
+		if (numOfValues === 0) {
+			return res.status(400).json({
+                error: { message: `Request body must contain either 'title', 'url', 'rating' or 'description'` }
+            });
+		}
+
+		BookmarksService.updateById(
+			req.app.get('db'),
+			req.params.id,
+			bookmarkToUpdate
+		)
+			.then(() => {
+				res.status(204).end();
+			})
+			.catch(next);
+	})
 
 module.exports = bookmarksRouter;

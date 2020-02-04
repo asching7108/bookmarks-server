@@ -18,14 +18,21 @@ const BookmarksService = {
             .insert(newData)
             .into('bookmarks')
             .returning('*')
-            .then(rows => rows[0])
+            .then(rows => rows[0]);
     },
 
     deleteById(knex, id) {
         return knex
             .delete()
             .from('bookmarks')
-            .where({ id })
+            .where({ id });
+    },
+
+    updateById(knex, id, updateData) {
+        return knex
+            .update(updateData)
+            .from('bookmarks')
+            .where({ id });
     }
 };
 
